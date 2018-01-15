@@ -1,0 +1,78 @@
+File: TrustaBitCrowdsale_04.01.sol
+
+Problem: constant functions
+Lines: 12-17
+Lines 641-643
+Notes: These functions are declared as 'constant'. Currently, for functions the 'constant' modifier is a synonym for 'view' (which is the preferred option). Consider using 'view' for funcitons and 'constant' for state variables. Declare functions which promise not modify the state as 'view' and not 'constant'. However, at the present time 'constant' is an alias to 'view'.
+
+Problem( low ): Using the approve function of the ERC-20 standard
+Lines: 211-215
+Lines: 370-372
+Notes: The 'approve' function of ERC-20 might lead to vulnerabilities. Only use the 'approve' function of the ERC-20 standard to change allowed amount to 0 or from 0 (wait till transaction is mined and approved).
+
+Problem: Costly loop
+Lines: 477-482
+Lines: 761-766
+Notes: Ethereum is a very resource-constrained environment. Prices per computational step are orders of magnitude higher than with centralized providers. Moreover, Ethereum miners impose a limit on the total number of gas consumed in a block. If 'array.length' is large enough, the function exceeds the block gas limit, and transactions calling it will never be confirmed:
+
+	for (uint256 i = 0; i < array.length ; i++) { 
+		cosltyFunc();
+	}
+
+This becomes a security issue, if an external actor influences 'array.length'. E.g., if array enumerates all registered addresses, an adversary can register many addresses, causing the problem described above. 
+
+Problem: No payable fallback function
+Lines: 10-18
+Lines: 21-23
+Lines: 32-67
+Lines: 111-116
+Lines: 124-154
+Lines: 162-167
+Lines: 178-250
+Lines: 261-296
+Lines: 343-345
+Lines: 386-513
+Lines: 523-567
+Note: The contract does not have payable fallback. All attempts to transfer or send ether to this contract will be reverted. Implement 'payable' fallback, if the contract should accept payments via 'transfer' or 'send'. 
+
+Problem: Compiler version not fixed
+Lines: 1-1
+Notes:  Solidity source files indicate the versions of the compiler they can be compiled with.
+
+pragma solidity ^0.4.17; // bad: compiles w 0.4.17 and above
+pragma solidity 0.4.17; // good : compiles w 0.4.17 only
+
+It is recommended to follow the latter example, as future compiler versions may handle certain language constructions in a way the developer did not foresee. 
+
+Problem: Redundant fallback function
+Lines: 343-345
+Notes: The payment rejection fallback is redundant. Contracts should reject unexpected payments. Before Solidity 0.4.0, it was done manually:
+
+function () payable { throw ; }
+
+Starting from Solidity 0.4.0, contracts without a fallback function automatically revert payments, making the code above redundant. Remove the function to save space: the contract will reject payments automatically.
+
+Problem: 'Revert' function in the body of the conditional operator 'if'
+Lines: 329-331
+Notes: Using the construction 'if (condition) {revert();}' instead of 'require(condition);'. Use 'require' for better code readability. Since the construction 'if (condition) {revert();}' is equivalent to 'require(!condition);'.
+
+Problem: Timestamp dependence
+Lines: 443-443
+Notes: The timestamp of the block can be slightly manipulated by the miner. One should not use timestamp's exact value for critical components of the contract. Block numbers and average block time can be used to estimate time, but this is not future proof as block times may change (such as the changes expected during Casper). Do not use 'now' for randomness.
+
+Problem: Unchecked math
+Lines: 356-356
+Lines: 374-374
+Lines 442-442
+Lines: 461-463
+Lines: 677-677
+Lines: 689-689
+Lines: 693-693
+Lines: 697-697
+Lines: 701-701
+Lines: 746-746
+Notes: Solidity is prone to integer over- and underflow. Overflow leads to unexpected effects and can lead to loss of funds if exploited by a malicious account. Check against over- and underflow (use the SafeMath library). 
+
+Problem: Implicit visibility level
+Lines: 127-127
+Notes: The default function visibility level in Solidity is public. Explicitly define function visibility to prevent confusion. Avoid ambiguity: explicitly declare visibility levels. 
